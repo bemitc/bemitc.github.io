@@ -29,7 +29,7 @@ function invoke(action, version, params={}) {
 }
 
 async function getDecks() {
-        return await invoke('deckNames', 6, 'apiKey=test123');
+        return await invoke('deckNames', 6);
 }
 const result = getDecks();
 console.log('got list of decks: ${result}');
