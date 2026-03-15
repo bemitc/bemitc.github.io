@@ -54,6 +54,9 @@
 
         canvas {
             margin-top: 20px;
+            height: 400px !important;
+            /* Force a height */
+            width: 100%;
         }
     </style>
 </head>
@@ -61,7 +64,7 @@
 <body>
 
     <div class="container">
-        <h1>Chess Stats Dashboard</h1>
+        <h1>Chess Rating Tracker</h1>
 
         <div class="stats-grid">
             <div class="stat-card">
@@ -119,49 +122,83 @@
                         {
                             label: 'Actual Rating',
                             data: ratings,
-                            borderColor: '#81b64c',
-                            borderWidth: 3,
-                            pointRadius: 4,
+                            borderColor: '#a3d16a',
+                            backgroundColor: '#a3d16a',
+                            borderWidth: 4,
+                            pointBackgroundColor: '#fff',
+                            pointRadius: 5,
                             fill: false,
-                            zIndex: 10
+                            order: 0
                         },
                         {
                             label: '68% Confidence (±1 RD)',
                             data: upper68,
-                            fill: '+1', 
-                            backgroundColor: 'rgba(129, 182, 76, 0.3)',
-                            borderColor: 'transparent',
-                            pointRadius: 0
+                            fill: 2,
+                            backgroundColor: 'rgba(163, 209, 106, 0.4)',
+                            borderColor: '#7ba151', 
+                            pointRadius: 0,
+                            order: 1
                         },
                         {
+                            label: 'hidden',
                             data: lower68,
                             fill: false,
                             borderColor: 'transparent',
-                            pointRadius: 0
+                            pointRadius: 0,
+                            order: 2
                         },
                         {
                             label: '95% Confidence (±2 RD)',
                             data: upper95,
-                            fill: '+1', 
-                            backgroundColor: 'rgba(129, 182, 76, 0.1)',
-                            borderColor: 'transparent',
-                            pointRadius: 0
+                            fill: 4,
+                            backgroundColor: 'rgba(163, 209, 106, 0.15)',
+                            borderColor: '#3a4a28',
+                            pointRadius: 0,
+                            order: 3
                         },
                         {
+                            label: 'hidden',
                             data: lower95,
                             fill: false,
                             borderColor: 'transparent',
-                            pointRadius: 0
+                            pointRadius: 0,
+                            order: 4
                         }
                     ]
                 },
                 options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
                     plugins: {
-                        legend: { labels: { filter: (item) => !item.text.includes('undefined') } } // Hides empty labels
+                        legend: {
+                            labels: {
+                                color: '#ffffff',
+                                usePointStyle: true,
+                                pointStyle: 'rect',
+                                padding: 20,
+                                generateLabels: (chart) => {
+                                    const original = Chart.defaults.plugins.legend.labels.generateLabels(chart);
+                                    return original
+                                        .filter(label => label.text !== 'hidden')
+                                        .map(label => {
+                                            const dataset = chart.data.datasets[label.datasetIndex];
+                                            label.fillStyle = dataset.borderColor;
+                                            label.strokeStyle = 'transparent';
+                                            return label;
+                                        });
+                                }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(25, 25, 25, 0.95)',
+                            titleColor: '#a3d16a',
+                            filter: (item) => item.dataset.label !== 'hidden'
+                        }
                     },
                     scales: {
-                        y: { grid: { color: '#333' } },
-                        x: { grid: { display: false } }
+                        y: { grid: { color: '#2a2a2a' }, ticks: { color: '#bbb' }, grace: '10%' },
+                        x: { grid: { display: false }, ticks: { color: '#bbb' } }
                     }
                 }
             });
