@@ -84,18 +84,14 @@
                 const response = await fetch(API_URL, { redirect: 'follow' });
                 const data = await response.json();
 
-                // Sort data by date (oldest to newest)
                 data.sort((a, b) => new Date(a.date) - new Date(b.date));
 
-                // Use ONLY the last 90 days of data for the chart
                 const recentData = data.slice(-90);
 
-                // Update text cards with the ABSOLUTE latest entry (from the full data)
                 const latest = data[data.length - 1];
                 document.getElementById('curr-rating').innerText = latest.rating;
                 document.getElementById('curr-rd').innerText = `±${Math.round(latest.rd * 2)}`;
 
-                // Prepare Chart.js data using only the RECENT data
                 const labels = recentData.map(row => new Date(row.date).toLocaleDateString());
                 const ratings = recentData.map(row => row.rating);
                 const rds = recentData.map(row => row.rd);
@@ -110,7 +106,6 @@
         function renderChart(labels, ratings, rds) {
             const ctx = document.getElementById('ratingChart').getContext('2d');
 
-            // Calculate the bands
             const upper95 = ratings.map((r, i) => r + (rds[i] * 2));
             const lower95 = ratings.map((r, i) => r - (rds[i] * 2));
             const upper68 = ratings.map((r, i) => r + rds[i]);
@@ -133,7 +128,7 @@
                         {
                             label: '68% Confidence (±1 RD)',
                             data: upper68,
-                            fill: '+1', // Fills down to the next dataset (lower68)
+                            fill: '+1', 
                             backgroundColor: 'rgba(129, 182, 76, 0.3)',
                             borderColor: 'transparent',
                             pointRadius: 0
@@ -147,7 +142,7 @@
                         {
                             label: '95% Confidence (±2 RD)',
                             data: upper95,
-                            fill: '+1', // Fills down to lower95
+                            fill: '+1', 
                             backgroundColor: 'rgba(129, 182, 76, 0.1)',
                             borderColor: 'transparent',
                             pointRadius: 0
