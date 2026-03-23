@@ -118,9 +118,8 @@
                 <div id="last-game-stat" class="stat-sub">--</div>
             </div>
             <div class="stat-card">
-                <div>Confidence Range (95%)</div>
+                <div>Rating Range (95% confidence)</div>
                 <div id="curr-rd" class="stat-val">--</div>
-                <div class="stat-sub">±2 Standard Deviations (RD)</div>
             </div>
         </div>
 
@@ -146,7 +145,7 @@
                 const recentData = data.slice(-90);
 
                 document.getElementById('curr-rating').innerText = latest.rating;
-                document.getElementById('curr-rd').innerText = `±${Math.round(latest.rd * 2)}`;
+                document.getElementById('curr-rd').innerText = `${latest.rating - Math.round(latest.rd * 2)} - ${latest.rating + Math.round(latest.rd * 2)}`;
 
                 const lastGameDate = new Date(latest.last_game).toLocaleDateString(undefined, {
                     month: 'short', day: 'numeric', year: 'numeric'
@@ -195,93 +194,113 @@
             }
         }
 
-        function renderChart(labels, ratings, rds, lastGameDates) {
-            const ctx = document.getElementById('ratingChart').getContext('2d');
+function renderChart(labels, ratings, rds, lastGameDates) {
+    const ctx = document.getElementById('ratingChart').getContext('2d');
 
-            const upper95 = ratings.map((r, i) => r + (rds[i] * 2));
-            const lower95 = ratings.map((r, i) => r - (rds[i] * 2));
-            const upper68 = ratings.map((r, i) => r + rds[i]);
-            const lower68 = ratings.map((r, i) => r - rds[i]);
+    const upper95 = ratings.map((r, i) => r + (rds[i] * 2));
+    const lower95 = ratings.map((r, i) => r - (rds[i] * 2));
+    const upper68 = ratings.map((r, i) => r + rds[i]);
+    const lower68 = ratings.map((r, i) => r - rds[i]);
 
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        {
-                            label: 'Actual Rating',
-                            data: ratings,
-                            borderColor: '#a3d16a',
-                            backgroundColor: '#a3d16a',
-                            borderWidth: 4,
-                            pointBackgroundColor: '#fff',
-                            pointRadius: 5,
-                            fill: false,
-                            order: 0
-                        },
-                        {
-                            label: '68% Confidence (±1 RD)',
-                            data: upper68,
-                            fill: 2,
-                            backgroundColor: 'rgba(163, 209, 106, 0.4)',
-                            borderColor: '#7ba151',
-                            pointRadius: 0,
-                            order: 1
-                        },
-                        {
-                            label: 'hidden',
-                            data: lower68,
-                            fill: false,
-                            borderColor: 'transparent',
-                            pointRadius: 0,
-                            order: 2
-                        },
-                        {
-                            label: '95% Confidence (±2 RD)',
-                            data: upper95,
-                            fill: 4,
-                            backgroundColor: 'rgba(163, 209, 106, 0.15)',
-                            borderColor: '#3a4a28',
-                            pointRadius: 0,
-                            order: 3
-                        },
-                        {
-                            label: 'hidden',
-                            data: lower95,
-                            fill: false,
-                            borderColor: 'transparent',
-                            pointRadius: 0,
-                            order: 4
-                        }
-                    ]
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Actual Rating',
+                    data: ratings,
+                    borderColor: '#a3d16a',
+                    backgroundColor: '#a3d16a',
+                    borderWidth: 4,
+                    pointBackgroundColor: '#fff',
+                    pointRadius: 5,
+                    fill: false,
+                    order: 0
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: { mode: 'index', intersect: false },
-                    scales: {
-                        x: { ticks: { color: '#888' } },
-                        y: { ticks: { color: '#888' } }
-                    },
-                    plugins: {
-                        legend: {
-                            labels: {
-                                color: '#ffffff',
-                                usePointStyle: true,
-                                pointStyle: 'rect',
-                                padding: 20,
-                                filter: (item) => item.text !== 'hidden'
-                            }
+                {
+                    label: '68% Confidence',
+                    data: upper68,
+                    fill: 2, // Fills to dataset index 2 (lower68)
+                    backgroundColor: 'rgba(163, 209, 106, 0.2)',
+                    borderColor: 'transparent',
+                    pointRadius: 0,
+                    order: 1
+                },
+                {
+                    label: 'lower68',
+                    data: lower68,
+                    fill: false,
+                    borderColor: 'transparent',
+                    pointRadius: 0,
+                    order: 2
+                },
+                {
+                    label: '95% Confidence',
+                    data: upper95,
+                    fill: 4, // Fills to dataset index 4 (lower95)
+                    backgroundColor: 'rgba(163, 209, 106, 0.1)',
+                    borderColor: 'transparent',
+                    pointRadius: 0,
+                    order: 3
+                },
+                {
+                    label: 'lower95',
+                    data: lower95,
+                    fill: false,
+                    borderColor: 'transparent',
+                    pointRadius: 0,
+                    order: 4
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',      // Shows the tooltip for the date/index you are hovering over
+                intersect: false,   // Tooltip appears even if you aren't directly on a point
+            },
+            plugins: {
+                legend: {
+                    labels: {
+                        filter: item => !item.text.includes('lower')
+                    }
+                },
+                tooltip: {
+                    enabled: true, // Ensure tooltips are explicitly turned on
+                    callbacks: {
+                        // Use the 'title' to show the date at the top of the tooltip
+                        title: function(context) {
+                            return context[0].label;
                         },
-                        tooltip: {
-                            backgroundColor: 'rgba(25, 25, 25, 0.95)',
-                            titleColor: '#a3d16a',
-                            filter: (item) => item.dataset.label !== 'hidden'
+                        // This replaces the dataset labels with your custom ranges
+                        label: function(context) {
+                            // Only run this for the "Actual Rating" dataset (index 0) 
+                            // to avoid repeating the tooltip 5 times.
+                            if (context.datasetIndex !== 0) return null;
+
+                            const index = context.dataIndex;
+                            const rating = ratings[index];
+                            const rd = Math.round(rds[index]);
+
+                            const low68 = rating - rd;
+                            const high68 = rating + rd;
+                            const low95 = rating - (rd * 2);
+                            const high95 = rating + (rd * 2);
+
+                            return [
+                                `Rating: ${rating}`,
+                                `68% Range: ${low68} - ${high68} (±${rd})`,
+                                `95% Range: ${low95} - ${high95} (±${rd * 2})`
+                            ];
                         }
                     }
                 }
-            });
+            },
         }
+    });
+}
 
         fetchData();
     </script>
