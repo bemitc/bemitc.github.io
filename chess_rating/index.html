@@ -186,7 +186,19 @@
                 const rds = recentData.map(row => row.rd);
                 const lastGameDates = recentData.map(row => row.last_game);
 
-                renderChart(labels, ratings, rds, lastGameDates);
+                const upper95Past = ratings.map((r, i) => i < 30 ? null : ratings[i - 30] + (rds[i - 30] * 2));
+                const lower95Past = ratings.map((r, i) => i < 30 ? null : ratings[i - 30] - (rds[i - 30] * 2));
+                const upper68Past = ratings.map((r, i) => i < 30 ? null : ratings[i - 30] + rds[i - 30]);
+                const lower68Past = ratings.map((r, i) => i < 30 ? null : ratings[i - 30] - rds[i - 30]);
+
+                const chartLabels = labels.slice(30);
+                const chartRatings = ratings.slice(30);
+                const chartUpper95 = upper95Past.slice(30);
+                const chartLower95 = lower95Past.slice(30);
+                const chartUpper68 = upper68Past.slice(30);
+                const chartLower68 = lower68Past.slice(30);
+
+                renderChart(chartLabels, chartRatings, chartUpper95, chartLower95, chartUpper68, chartLower68, lastGameDates);
 
             } catch (err) {
                 console.error("Error loading data:", err);
@@ -194,26 +206,8 @@
             }
         }
 
-        function renderChart(labels, ratings, rds, lastGameDates) {
+        function renderChart(labels, ratings, upper95, lower95, upper68, lower68, lastGameDates) {
             const ctx = document.getElementById('ratingChart').getContext('2d');
-
-            // Calculate bands based on the rating/RD from 30 indices (days) ago
-            const upper95Past = ratings.map((r, i) => {
-                const pastIdx = Math.max(0, i - 30);
-                return ratings[pastIdx] + (rds[pastIdx] * 2);
-            });
-            const lower95Past = ratings.map((r, i) => {
-                const pastIdx = Math.max(0, i - 30);
-                return ratings[pastIdx] - (rds[pastIdx] * 2);
-            });
-            const upper68Past = ratings.map((r, i) => {
-                const pastIdx = Math.max(0, i - 30);
-                return ratings[pastIdx] + rds[pastIdx];
-            });
-            const lower68Past = ratings.map((r, i) => {
-                const pastIdx = Math.max(0, i - 30);
-                return ratings[pastIdx] - rds[pastIdx];
-            });
 
             new Chart(ctx, {
                 type: 'line',
@@ -233,7 +227,7 @@
                         },
                         {
                             label: 'Upper 68%',
-                            data: upper68Past,
+                            data: upper68,
                             fill: 2,
                             backgroundColor: 'rgba(129, 182, 76, 0.3)',
                             borderColor: 'transparent',
@@ -242,7 +236,7 @@
                         },
                         {
                             label: 'Lower 68%',
-                            data: lower68Past,
+                            data: lower68,
                             fill: false,
                             borderColor: 'transparent',
                             pointRadius: 0,
@@ -251,7 +245,7 @@
                         },
                         {
                             label: 'Upper 95%',
-                            data: upper95Past,
+                            data: upper95,
                             fill: 4,
                             backgroundColor: 'rgba(255, 255, 255, 0.05)',
                             borderColor: 'rgba(255, 255, 255, 0.1)',
@@ -261,7 +255,7 @@
                         },
                         {
                             label: 'Lower 95%',
-                            data: lower95Past,
+                            data: lower95,
                             fill: false,
                             borderColor: 'rgba(255, 255, 255, 0.1)',
                             borderDash: [5, 5],
