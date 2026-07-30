@@ -126,7 +126,7 @@
         <canvas id="ratingChart"></canvas>
 
         <div id="status-container" class="status-bar status-neutral">
-            <div class="status-title">Performance Status (30D Comparison)</div>
+            <div class="status-title">Performance Status (90D Comparison)</div>
             <div id="status-text" class="status-desc">Fetching Data...</div>
         </div>
     </div>
@@ -142,7 +142,7 @@
                 data.sort((a, b) => new Date(a.date) - new Date(b.date));
 
                 const latest = data[data.length - 1];
-                const recentData = data.slice(-90);
+                const recentData = data.slice(-365);
 
                 document.getElementById('curr-rating').innerText = latest.rating;
                 document.getElementById('curr-rd').innerText = `${latest.rating - Math.round(latest.rd * 2)} - ${latest.rating + Math.round(latest.rd * 2)}`;
@@ -155,24 +155,22 @@
                 const statusContainer = document.getElementById('status-container');
                 const statusText = document.getElementById('status-text');
 
-                if (data.length < 30) {
+                if (data.length < 90) {
                     statusContainer.className = "status-bar status-neutral";
-                    statusText.innerText = `Calibrating... (${data.length}/30 days)`;
+                    statusText.innerText = `Calibrating... (${data.length}/90 days)`;
                 } else {
-                    const day30Ago = data[data.length - 30];
+                    const day90Ago = data[data.length - 90];
 
-                    const currentFloor = latest.rating - (latest.rd * 2);
-                    const currentCeiling = latest.rating + (latest.rd * 2);
-                    const oldFloor = day30Ago.rating - (day30Ago.rd * 2);
-                    const oldCeiling = day30Ago.rating + (day30Ago.rd * 2);
+                    const oldFloor = day90Ago.rating - (day90Ago.rd * 2);
+                    const oldCeiling = day90Ago.rating + (day90Ago.rd * 2);
 
-                    const eloDiff = latest.rating - day30Ago.rating;
+                    const eloDiff = latest.rating - day90Ago.rating;
                     const sign = eloDiff >= 0 ? "+" : "";
 
-                    if (currentFloor > oldCeiling) {
+                    if (latest.rating > oldCeiling) {
                         statusContainer.className = "status-bar status-positive";
                         statusText.innerText = `Confirmed Growth (${sign}${eloDiff} pts)`;
-                    } else if (currentCeiling < oldFloor) {
+                    } else if (latest.rating < oldFloor) {
                         statusContainer.className = "status-bar status-negative";
                         statusText.innerText = `Confirmed Regression (${sign}${eloDiff} pts)`;
                     } else {
@@ -186,17 +184,17 @@
                 const rds = recentData.map(row => row.rd);
                 const lastGameDates = recentData.map(row => row.last_game);
 
-                const upper95Past = ratings.map((r, i) => i < 30 ? null : ratings[i - 30] + (rds[i - 30] * 2));
-                const lower95Past = ratings.map((r, i) => i < 30 ? null : ratings[i - 30] - (rds[i - 30] * 2));
-                const upper68Past = ratings.map((r, i) => i < 30 ? null : ratings[i - 30] + rds[i - 30]);
-                const lower68Past = ratings.map((r, i) => i < 30 ? null : ratings[i - 30] - rds[i - 30]);
+                const upper95Past = ratings.map((r, i) => i < 90 ? null : ratings[i - 90] + (rds[i - 90] * 2));
+                const lower95Past = ratings.map((r, i) => i < 90 ? null : ratings[i - 90] - (rds[i - 90] * 2));
+                const upper68Past = ratings.map((r, i) => i < 90 ? null : ratings[i - 90] + rds[i - 90]);
+                const lower68Past = ratings.map((r, i) => i < 90 ? null : ratings[i - 90] - rds[i - 90]);
 
-                const chartLabels = labels.slice(30);
-                const chartRatings = ratings.slice(30);
-                const chartUpper95 = upper95Past.slice(30);
-                const chartLower95 = lower95Past.slice(30);
-                const chartUpper68 = upper68Past.slice(30);
-                const chartLower68 = lower68Past.slice(30);
+                const chartLabels = labels.slice(90);
+                const chartRatings = ratings.slice(90);
+                const chartUpper95 = upper95Past.slice(90);
+                const chartLower95 = lower95Past.slice(90);
+                const chartUpper68 = upper68Past.slice(90);
+                const chartLower68 = lower68Past.slice(90);
 
                 renderChart(chartLabels, chartRatings, chartUpper95, chartLower95, chartUpper68, chartLower68, lastGameDates);
 
